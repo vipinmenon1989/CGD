@@ -1,0 +1,12 @@
+# CGD dependencies
+# Python >= 3.8 required
+
+# ViennaRNA Python bindings (RNA free energy calculations)
+# Best installed via conda:
+#   conda install -c bioconda viennarna
+# Or via pip:
+#   pip install ViennaRNA
+ViennaRNA>=2.5.0
+
+# Numerical computing
+numpy>=1.12.4

@@ -1,138 +1,149 @@
-# CGD
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+# CGD — Comprehensive Guide RNA Design
 
-CGD is python based on-target scoring method for CRISPRi, CRISPRa, Cas9, Cas9 (non-canonical) and Cas12a sequences.They are consortium of scores such as CGDi, CGDa, CGD9, CGD9NG and CGD12a, which are based on ENLOR(ELastic Net Logistic Regression) weights. 
+**Author:** Vipin Menon, BIG Lab, Hanyang University (HYU)
+**Contact:** a.vipin.menon@gmail.com
+**Original:** September 2019 | **Modernized:** 2026
+**Language:** Python 3.8+
+**License:** MIT
 
-## Website
+---
 
-The authors can access our website for CGD at http://big.hanyang.ac.kr:2195/CGD. The webiste provide GUI for the users to get on-target score for gRNA corresponding to Cas9 (canonical and non-canonical), CRISPRi, CRISPRa and Cas12a.
+## Overview
 
-## Source code 
+CGD is a Python-based on-target scoring tool for multiple CRISPR systems. It predicts guide RNA activity using **ENLOR (Elastic Net Logistic Regression)** models trained on experimental data.
 
-### Requirements
+| Score  | CRISPR System              | PAM       |
+|--------|---------------------------|-----------|
+| CGDi   | CRISPRi (interference)    | NGG       |
+| CGDa   | CRISPRa (activation)      | NGG       |
+| CGD9   | CRISPR-Cas9 canonical     | NGG       |
+| CGD9NG | CRISPR-Cas9 non-canonical | NGA/NGC/NGT |
+| CGD12a | CRISPR-Cas12a (Cpf1)      | TTTV      |
 
-  - Python 2.7 or above
-  - Vienna RNA package
-  - Numpy (version > = 1.12.4)
-  - math
-  - reverse complement (The file is provided as "get_sequence" in CGD)
-  
-### Package installation
+Each model combines: RNA free energy · sequence entropy · GC content · position-dependent nucleotide features.
 
-For Vienna RNA package see the instructions in their official site https://www.tbi.univie.ac.at/RNA/ for python installation
-The rest packages could be installed by using ```pip```
+> **Web interface:** http://big.hanyang.ac.kr:2195/CGD
 
-### Help
-To make our source code user friendly we have provided help function which could be implemented in following way
-```
-python CGD.py -h help
-usage: CGD.py [-h] [-a] [-b] [-c] [-d] [-e] [-f]
+---
 
-working with CGD
+## Installation
 
-optional arguments:
-  -h, --help  show this help message and exit
-  -a        The option generates Comprehensive score using Comprehesive function
-  -b        The option generates CRISPRi score using CGDi function
-  -c        The option generates CRISPRa score using CGDa function
-  -d        The option generates CRISPR-Cas9 score using CGD9 function
-  -e        The option generates CRISPR-Cas12a score using CGD12a function
-  -f        The option generates CRISPR-Cas9 (non-canonical) score using CGD9NG function
-```    
-
-### Use 
-CGD python file is executed on fasta file
-- The input file should be in fasta format 
-- The length of fasta file should be betweem 100nt and 10000nt
-- The scores are generated with range [0,1], where the gRNA sequences with score lesser than 0.5 are considered efficient.
-- The output file are shown in tabular format which compromises of ID, Start,End, Strand, 30 or 34nt sequence (based on Cas system)   and on-target score 
-``` python
-    python CGD.py -a input.fa (Comprehensive Score)
-    
-    Example file: input.fa 
-    
-    >XM_030244935
-    CGGCGCGGAGTGCGCCGGCGCGTCGTCGGGGACGCCGGGTCCAGGATCTTGCTAGGGAACCAGTGTTGTC
-    GCGTCGTCCCGCCCCCTCGGGGCTTTTGCTCCCGTTAACTGTCGGCGGGGCAGGCTCCGCAGCGCAGGGC
-    GACATGCCGGTGCGCTTCAAGGGATCACGAAAGAACCAGGTTTTATTTCAAAAAGAAGAGTTCCCTACCA
-    TGACCCTCAGATTTCAAAATACCTGGAGTGGAACGGAACCGTCAGAAAGAAGGATACGCTTGTCCCACCA
-    GAACCCCAGGCCTTTGGAACGCCAAAGCCACAAGAGGCTGAGCAAGGAGAAGATGCCAATCAAGAAGCAG
-    TTCTCTCACTAGAGGCCTCCAGGGTTCCCAAGAGAACTCGGTCTCATTCTGCGGACTCGAGAGCTGAAGG
-    GGTTTCAGACACTGTGGAAAAGCACCAGGGTGTCACGAGAAGCCATGCGCCAGTTAGCGCGGATGTGGAG
-    CTGAGACCTTCCAGCAAACAACCTCTCTCCCAGAGCATAGATCCCAGGTTGGATAGGCATCTTCGTAAGA
-    AAGCTGGATTGGCCGTTGTTCCCACGAATAATGCCTTGAGAAATTCTGAATACCAAAGGCAGTTTGTTTG
-```
-- Output (CGD.txt)
-```
-ID	Start	End	Strand	Sequence	CGDi	CGDa	CGD9	CGDNG	CGD12a
-XM_030244935	1877	1907	-	TGCTGGACGGATGACAGTAAGGCGGGGCAC	0.86	0.39	1.0	0.0	0.0
-XM_030244935	1877	1907	-	TGCTGGACGGATGACAGTAAGGCGGGGCAC	0.86	0.39	1.0	0.0	0.0
-XM_030244935	1877	1907	-	TGCTGGACGGATGACAGTAAGGCGGGGCAC	0.86	0.39	1.0	0.0	0.0
-XM_030244935	1510	1540	+	AAGGGAGGCAGGCTTCCTACACCGAGGCTG	0.92	0.39	0.99	0.0	0.0
-XM_030244935	1867	1897	-	ATGACAGTAAGGCGGGGCACATGGAGGCAG	0.96	0.7	0.99	0.0	0.0
-XM_030244935	1301	1331	-	CCCAAGCCAGCTTCCTCCTGACCGAGGCGG	0.89	0.53	0.99	0.0	0.0
-XM_030244935	1301	1331	-	CCCAAGCCAGCTTCCTCCTGACCGAGGCGG	0.89	0.53	0.99	0.0	0.0
-XM_030244935	479	509	+	CGGATGTGGAGCTGAGACCTTCCAGCAAAC	0	0	0	0.98	0
-XM_030244935	264	294	+	TACGCTTGTCCCACCAGAACCCCAGGCCTT	0	0	0	0.81	0
-XM_030244935	228	262	+	ATACCTGGAGTGGAACGGAACCGTCAGAAAGAAG	0	0	0	0	0.98
-XM_030244935	969	1003	+	TTGGACCCGGGTGAAGGAGAACCTGTCAAACCAG	0	0	0	0	0.97
-```
-```
-  python CGD.py -b input.fa  (Exclusive for CRISPRi)
-```
-- Output (CGDi.txt)
-```
-ID	Start	End	Stand	Sequence	CGDi	
-XM_030244935	65	95	+	TTGTCGCGTCGTCCCGCCCCCTCGGGGCTT	0.99
-XM_030244935	1363	1393	+	GAGGAGCCCAGGGCGGAGGAGGACGGGAGA	0.98
-XM_030244935	1377	1407	+	GGAGGAGGACGGGAGAGAGGAGAGAGGACA	0.86
-XM_030244935	271	301	-	CGTTCCAAAGGCCTGGGGTTCTGGTGGGAC	0.85
-```
-```
-  python CGD.py -c input.fa  (Exclusive for CRISPRa)
-```
-- Output (CGDa.txt)
-```
-ID	Start	End	Strand	Sequence	CGDa
-XM_030244935	1363	1393	+	GAGGAGCCCAGGGCGGAGGAGGACGGGAGA	0.83
-XM_030244935	2	32	+	GCGCGGAGTGCGCCGGCGCGTCGTCGGGGA	0.83
-XM_030244935	1370	1400	+	CCAGGGCGGAGGAGGACGGGAGAGAGGAGA	0.72
-XM_030244935	1362	1392	+	GGAGGAGCCCAGGGCGGAGGAGGACGGGAG	0.71
-```
-```
-  python CGD.py -d input.fa  (Exclusive for CRISPR-Cas9)
-```
-- Output (CGD9.txt)
-```
-ID	Start	End	Strand	Sequence	CGD9
-XM_030244935	1877	1907	-	TGCTGGACGGATGACAGTAAGGCGGGGCAC	1.0
-XM_030244935	1867	1897	-	ATGACAGTAAGGCGGGGCACATGGAGGCAG	0.99
-XM_030244935	1926	1956	+	AGACCCTGAGTTTCAGCACAACATGGGAAA	0.95
-XM_030244935	569	599	-	TCAAGGCATTATTCGTGGGAACAACGGCCA	0.94
-```
-```
-  python CGD.py -d input.fa  (Exclusive for CRISPR-Cas12a)
-```
-- Output (CGD12a.txt)
-```
-ID	Start	End	Strand	Sequence	CGD12a
-XM_030244935	1831	1865	+	AAAATTTTGGACCGTCAGCCCAGCACCCCTGGGC	1.0
-XM_030244935	198	232	-	GTATTTTGAAATCTGAGGGTCATGGTAGGGAACT	0.91
-XM_030244935	758	792	+	AGTATTTGAAAGGAAACAGCAGTCTGGAGATGCT	0.9
-XM_030244935	654	688	+	AGTGTTTGCATCCAATCAGTTCCAAGGCAATACA	0.89
-```
-```
-  python CGD.py -d input.fa  (Exclusive for CRISPR-Cas12a)
-```
-- Output (CGD9NG.txt)
-```
-ID  Start	End	Strand	Sequence	CGD9NG
-XM_0302449	1378	1408	+	GAGGAGGACGGGAGAGAGGAGAGAGGACAG	1.0
-XM_0302449	1341	1371	+	GAGCACGAAGGAAGACACCCAGGAGGAGCC	0.99
-XM_0302449	784	814	-	GAGATGCTGACTCCAGTAAAGAAGGGAGAT	0.98
-XM_0302449	834	864	-	AGACATGGCGTCGGAAGACTCAGACGAGTC	0.8
+### 1. Clone the repository
+```bash
+git clone https://github.com/vipinmenon1989/CGD.git
+cd CGD
 ```
 
-License
-----
-MIT
+### 2. Create a virtual environment (recommended)
+```bash
+python3 -m venv venv
+source venv/bin/activate       # macOS / Linux
+venv\Scripts\activate          # Windows
+```
+
+### 3. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+
+> **ViennaRNA** must be installed separately via conda (recommended):
+> ```bash
+> conda install -c bioconda viennarna
+> ```
+
+---
+
+## Input Format
+
+A standard **FASTA file** with one or more sequences, each between **100 and 10 000 nt**.
+
+```
+>XM_030244935
+CGGCGCGGAGTGCGCCGGCGCGTCGTCGGGGACGCCGGGTCCAGGATCTTGCTAGGGAA
+CCAGTGTTGTCGCGTCGTCCCGCCCCCTCGGGGCTTTTGCTCCCGTTAACTGTCGGCGG
+...
+```
+
+---
+
+## Usage
+
+### Comprehensive scoring (all CRISPR systems)
+```bash
+python CGD.py -a input.fa
+```
+Output: `CGD.txt` — tab-separated with columns `ID, Start, End, Strand, Sequence, CGDi, CGDa, CGD9, CGDNG, CGD12a`
+
+### CRISPRi only
+```bash
+python CGD.py -b input.fa
+```
+Output: `CGDi.txt`
+
+### CRISPRa only
+```bash
+python CGD.py -c input.fa
+```
+Output: `CGDa.txt`
+
+### CRISPR-Cas9 (canonical NGG) only
+```bash
+python CGD.py -d input.fa
+```
+Output: `CGD9.txt`
+
+### CRISPR-Cas12a only
+```bash
+python CGD.py -e input.fa
+```
+Output: `CGD12a.txt`
+
+### CRISPR-Cas9 non-canonical (NGA/NGC/NGT) only
+```bash
+python CGD.py -f input.fa
+```
+Output: `CGD9NG.txt`
+
+---
+
+## Output Format
+
+All output files are tab-separated with a header row:
+
+| Column     | Description                              |
+|------------|------------------------------------------|
+| ID         | Sequence identifier from FASTA header    |
+| Start      | Guide start position (0-indexed)         |
+| End        | Guide end position                       |
+| Strand     | `+` (forward) or `-` (reverse)          |
+| Sequence   | 30 or 34 bp guide sequence               |
+| Score      | ENLOR-based activity score in [0, 1]     |
+
+Guides with scores **< 0.5** are considered **efficient** by the CGD model.
+
+---
+
+## Project Structure
+
+```
+CGD/
+├── CGD.py              # Main scoring tool
+├── get_sequence.py     # Reverse complement utility
+├── requirements.txt    # Python dependencies
+├── README.md           # This file
+├── .gitignore          # Git ignore rules
+├── Test_dataset/       # Example input FASTA files
+└── Training_data/      # Training data used to build models
+```
+
+---
+
+## Citation
+
+If you use CGD in your research, please cite the BIG Lab publication.
+
+---
+
+## License
+
+MIT License — see `LICENSE` file for details.
