@@ -140,7 +140,7 @@ CGD/
 
 ## Citation
 
-If you use CGD in your research, please cite the BIG Lab publication.
+Menon AV, Sohn JI, Nam JW. CGD: Comprehensive guide designer for CRISPR-Cas systems. Comput Struct Biotechnol J. 2020 Mar 25;18:814-820. doi: 10.1016/j.csbj.2020.03.020. PMID: 32308928; PMCID: PMC7152703.
 
 ---
 
