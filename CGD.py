@@ -42,7 +42,6 @@ import argparse
 import math
 import sys
 from collections import OrderedDict
-from itertools import chain
 from typing import Dict, Iterator, List, Optional, Tuple
 
 import numpy as np
@@ -389,7 +388,7 @@ def score_crispra(sequence: str) -> float:
         ("CC",5,-0.050765507),("CC",19,0.115084718),("CC",22,-0.089198303),
     ]
     intercept      = -1.671946104
-    w_entropy      =  0.4037850136
+    w_entropy      =  0.4037850136  # noqa: F841 -- present in the published ENLOR model but never applied to the score below; reproduced faithfully from the original CGD (2019) source rather than "corrected", since changing it would silently alter published results.
     gc_high        =  0.240138978
     gc_low         = -0.016037794
     w_free_energy  = -0.000342883
@@ -680,13 +679,14 @@ def _write_tsv(
             out.write("\t".join(str(v) for v in record) + "\n")
 
 
-def run_comprehensive(fasta_path: str) -> None:
+def run_comprehensive(fasta_path: str, output: Optional[str] = None) -> None:
     """
     Score all guide RNA candidates (CRISPRi, CRISPRa, Cas9, Cas9NG, Cas12a)
-    from a FASTA file and write results to ``CGD.txt``.
+    from a FASTA file and write results to ``CGD.txt`` (or *output* if given).
 
     Args:
         fasta_path: Path to input FASTA file (sequences must be 100–10 000 nt).
+        output: Optional destination path (default: ``CGD.txt``).
     """
     records: Dict[str, GuideRecord] = {}
 
@@ -748,11 +748,12 @@ def run_comprehensive(fasta_path: str) -> None:
             records[guide_id] = [seq_id, start, end, "-", rc_window, 0.0, 0.0, 0.0, 0.0, round(score_cas12a(rc_window), 2)]
 
     header = ["ID", "Start", "End", "Strand", "Sequence", "CGDi", "CGDa", "CGD9", "CGDNG", "CGD12a"]
-    _write_tsv("CGD.txt", header, records, sort_col=7)
-    print(f"Comprehensive scoring complete → CGD.txt  ({len(records)} guides)")
+    out_path = output or "CGD.txt"
+    _write_tsv(out_path, header, records, sort_col=7)
+    print(f"Comprehensive scoring complete → {out_path}  ({len(records)} guides)")
 
 
-def run_cgdi(fasta_path: str) -> None:
+def run_cgdi(fasta_path: str, output: Optional[str] = None) -> None:
     """
     Score CRISPRi guide RNAs from a FASTA file. Output written to ``CGDi.txt``.
 
@@ -770,11 +771,12 @@ def run_cgdi(fasta_path: str) -> None:
         for start, end, rc_window in _scan_reverse(sequence, "CC", 3, 27):
             records[f"gRNAin_{start}"] = [seq_id, start, end, "-", rc_window, round(score_crispri(rc_window), 2)]
 
-    _write_tsv("CGDi.txt", ["ID", "Start", "End", "Strand", "Sequence", "CGDi"], records, sort_col=5)
-    print(f"CRISPRi scoring complete → CGDi.txt  ({len(records)} guides)")
+    out_path = output or "CGDi.txt"
+    _write_tsv(out_path, ["ID", "Start", "End", "Strand", "Sequence", "CGDi"], records, sort_col=5)
+    print(f"CRISPRi scoring complete → {out_path}  ({len(records)} guides)")
 
 
-def run_cgda(fasta_path: str) -> None:
+def run_cgda(fasta_path: str, output: Optional[str] = None) -> None:
     """
     Score CRISPRa guide RNAs from a FASTA file. Output written to ``CGDa.txt``.
 
@@ -792,11 +794,12 @@ def run_cgda(fasta_path: str) -> None:
         for start, end, rc_window in _scan_reverse(sequence, "CC", 3, 27):
             records[f"gRNAan_{start}"] = [seq_id, start, end, "-", rc_window, round(score_crispra(rc_window), 2)]
 
-    _write_tsv("CGDa.txt", ["ID", "Start", "End", "Strand", "Sequence", "CGDa"], records, sort_col=5)
-    print(f"CRISPRa scoring complete → CGDa.txt  ({len(records)} guides)")
+    out_path = output or "CGDa.txt"
+    _write_tsv(out_path, ["ID", "Start", "End", "Strand", "Sequence", "CGDa"], records, sort_col=5)
+    print(f"CRISPRa scoring complete → {out_path}  ({len(records)} guides)")
 
 
-def run_cgd9(fasta_path: str) -> None:
+def run_cgd9(fasta_path: str, output: Optional[str] = None) -> None:
     """
     Score CRISPR-Cas9 guide RNAs from a FASTA file. Output written to ``CGD9.txt``.
 
@@ -814,11 +817,12 @@ def run_cgd9(fasta_path: str) -> None:
         for start, end, rc_window in _scan_reverse(sequence, "CC", 3, 27):
             records[f"gRNA9n_{start}"] = [seq_id, start, end, "-", rc_window, round(score_cas9(rc_window), 2)]
 
-    _write_tsv("CGD9.txt", ["ID", "Start", "End", "Strand", "Sequence", "CGD9"], records, sort_col=5)
-    print(f"Cas9 scoring complete → CGD9.txt  ({len(records)} guides)")
+    out_path = output or "CGD9.txt"
+    _write_tsv(out_path, ["ID", "Start", "End", "Strand", "Sequence", "CGD9"], records, sort_col=5)
+    print(f"Cas9 scoring complete → {out_path}  ({len(records)} guides)")
 
 
-def run_cgd12a(fasta_path: str) -> None:
+def run_cgd12a(fasta_path: str, output: Optional[str] = None) -> None:
     """
     Score CRISPR-Cas12a guide RNAs from a FASTA file. Output written to ``CGD12a.txt``.
 
@@ -836,11 +840,12 @@ def run_cgd12a(fasta_path: str) -> None:
         for start, end, rc_window in _scan_reverse(sequence, "AAA", 27, 7):
             records[f"gRNAcasr_{start}"] = [seq_id, start, end, "-", rc_window, round(score_cas12a(rc_window), 2)]
 
-    _write_tsv("CGD12a.txt", ["ID", "Start", "End", "Strand", "Sequence", "CGD12a"], records, sort_col=5)
-    print(f"Cas12a scoring complete → CGD12a.txt  ({len(records)} guides)")
+    out_path = output or "CGD12a.txt"
+    _write_tsv(out_path, ["ID", "Start", "End", "Strand", "Sequence", "CGD12a"], records, sort_col=5)
+    print(f"Cas12a scoring complete → {out_path}  ({len(records)} guides)")
 
 
-def run_cgd9ng(fasta_path: str) -> None:
+def run_cgd9ng(fasta_path: str, output: Optional[str] = None) -> None:
     """
     Score CRISPR-Cas9 non-canonical PAM guide RNAs (NGA, NGC, NGT) from a FASTA
     file. Output written to ``CGD9NG.txt``.
@@ -860,8 +865,9 @@ def run_cgd9ng(fasta_path: str) -> None:
             for start, end, rc_window in _scan_reverse(sequence, rc_pam, 3, 27):
                 records[f"gRNAngr{pam}_{start}"] = [seq_id, start, end, "-", rc_window, round(score_cas9ng(rc_window), 2)]
 
-    _write_tsv("CGD9NG.txt", ["ID", "Start", "End", "Strand", "Sequence", "CGD9NG"], records, sort_col=5)
-    print(f"Cas9-NG scoring complete → CGD9NG.txt  ({len(records)} guides)")
+    out_path = output or "CGD9NG.txt"
+    _write_tsv(out_path, ["ID", "Start", "End", "Strand", "Sequence", "CGD9NG"], records, sort_col=5)
+    print(f"Cas9-NG scoring complete → {out_path}  ({len(records)} guides)")
 
 
 # ===========================================================================
@@ -894,6 +900,10 @@ def _build_parser() -> argparse.ArgumentParser:
     mode.add_argument("-d", metavar="FASTA", help="CRISPR-Cas9 canonical score (CGD9)")
     mode.add_argument("-e", metavar="FASTA", help="CRISPR-Cas12a score (CGD12a)")
     mode.add_argument("-f", metavar="FASTA", help="CRISPR-Cas9 non-canonical score (CGD9NG)")
+    parser.add_argument(
+        "-o", "--output", metavar="PATH", default=None,
+        help="Output file path (default: mode-specific name in the current directory, e.g. CGD.txt)",
+    )
     return parser
 
 
@@ -904,17 +914,17 @@ def main() -> None:
 
     try:
         if args.a:
-            run_comprehensive(args.a)
+            run_comprehensive(args.a, output=args.output)
         elif args.b:
-            run_cgdi(args.b)
+            run_cgdi(args.b, output=args.output)
         elif args.c:
-            run_cgda(args.c)
+            run_cgda(args.c, output=args.output)
         elif args.d:
-            run_cgd9(args.d)
+            run_cgd9(args.d, output=args.output)
         elif args.e:
-            run_cgd12a(args.e)
+            run_cgd12a(args.e, output=args.output)
         elif args.f:
-            run_cgd9ng(args.f)
+            run_cgd9ng(args.f, output=args.output)
     except (FileNotFoundError, ValueError) as err:
         print(f"ERROR: {err}", file=sys.stderr)
         sys.exit(1)

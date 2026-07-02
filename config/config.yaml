@@ -1,0 +1,23 @@
+# CGD Snakemake workflow configuration
+# -------------------------------------
+# List each FASTA input you want scored, keyed by a short sample name.
+samples:
+  demo: input.fa
+
+# Which CRISPR-system scoring modes to run for every sample.
+#   comprehensive - all systems combined (CGD.txt equivalent)
+#   crispri       - CRISPRi only  (CGD.py -b)
+#   crispra       - CRISPRa only  (CGD.py -c)
+#   cas9          - Cas9 canonical PAM (CGD.py -d)
+#   cas12a        - Cas12a / Cpf1      (CGD.py -e)
+#   cas9_ng       - Cas9 non-canonical PAM (CGD.py -f)
+modes:
+  - comprehensive
+  - crispri
+  - crispra
+  - cas9
+  - cas12a
+  - cas9_ng
+
+# Directory where results are written (results/<sample>/<SCORE>.txt)
+outdir: results

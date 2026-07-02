@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Lint, run CGD.py, run Snakemake workflow
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install CGD dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install snakemake "pulp<2.8" flake8 pyflakes pytest
+
+      - name: Sanity-check ViennaRNA bindings
+        run: python -c "import RNA; print(RNA.fold('ATCGATCGATCGATCGATCG'))"
+
+      - name: Lint (syntax errors / undefined names only)
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Run unit tests
+        run: pytest tests/ -v
+
+      - name: Run CGD.py directly on the bundled example FASTA
+        run: |
+          python CGD.py -a input.fa -o /tmp/CGD.txt
+          test -s /tmp/CGD.txt
+
+      - name: Dry-run the Snakemake workflow
+        run: snakemake --cores 1 -n
+
+      - name: Run the Snakemake workflow end to end
+        run: snakemake --cores 2
+
+      - name: Verify Snakemake outputs were produced
+        run: |
+          for f in results/demo/CGD.txt results/demo/CGDi.txt results/demo/CGDa.txt \
+                   results/demo/CGD9.txt results/demo/CGD12a.txt results/demo/CGD9NG.txt; do
+            test -s "$f" || { echo "Missing or empty output: $f"; exit 1; }
+          done
+
+      - name: Upload workflow results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cgd-results-py${{ matrix.python-version }}
+          path: results/
+          retention-days: 7

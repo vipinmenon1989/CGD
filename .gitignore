@@ -1,0 +1,25 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Generated CGD score outputs (regenerate with CGD.py / Snakemake)
+/CGD.txt
+/CGDi.txt
+/CGDa.txt
+/CGD9.txt
+/CGD9NG.txt
+/CGD12a.txt
+results/
+
+# Snakemake
+.snakemake/
+
+# OS / editor cruft
+.DS_Store
+*.swp
