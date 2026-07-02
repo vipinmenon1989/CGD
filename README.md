@@ -1,5 +1,7 @@
 # CGD — Comprehensive Guide RNA Design
 
+[![CI](https://github.com/vipinmenon1989/CGD/actions/workflows/ci.yml/badge.svg)](https://github.com/vipinmenon1989/CGD/actions/workflows/ci.yml)
+
 **Author:** Vipin Menon, BIG Lab, Hanyang University (HYU)
 **Contact:** a.vipin.menon@gmail.com
 **Original:** September 2019 | **Modernized:** 2026
@@ -123,17 +125,95 @@ Guides with scores **< 0.5** are considered **efficient** by the CGD model.
 
 ---
 
+### Custom output path
+
+Every mode accepts `-o/--output` to write results to a specific path instead of
+the mode's default filename in the current directory:
+
+```bash
+python CGD.py -a input.fa -o results/my_sample_CGD.txt
+```
+
+---
+
+## Snakemake Workflow
+
+For batch scoring of multiple FASTA files across multiple CRISPR systems, use
+the included Snakemake workflow instead of calling `CGD.py` by hand.
+
+### 1. Install Snakemake (in addition to `requirements.txt`)
+```bash
+pip install snakemake "pulp<2.8"
+```
+
+### 2. Configure samples and modes
+Edit `config/config.yaml`:
+```yaml
+samples:
+  demo: input.fa          # sample_name: path/to/input.fa
+
+modes:
+  - comprehensive          # CGD.py -a
+  - crispri                # CGD.py -b
+  - crispra                # CGD.py -c
+  - cas9                   # CGD.py -d
+  - cas12a                 # CGD.py -e
+  - cas9_ng                # CGD.py -f
+
+outdir: results
+```
+
+### 3. Run
+```bash
+# Preview the jobs Snakemake will run
+snakemake --cores 1 -n
+
+# Run using dependencies already on PATH
+snakemake --cores 4
+
+# Or let Snakemake manage an isolated conda environment (envs/environment.yaml)
+snakemake --cores 4 --use-conda
+```
+
+Output: `results/<sample>/<SCORE>.txt` (e.g. `results/demo/CGD.txt`,
+`results/demo/CGDi.txt`, …), with per-job logs under `results/logs/`.
+
+---
+
+## Continuous Integration
+
+Every push and pull request is validated by GitHub Actions
+(`.github/workflows/ci.yml`), which:
+
+- Installs dependencies (including ViennaRNA bindings) on Python 3.10 and 3.11
+- Lints for syntax errors / undefined names
+- Runs the unit test suite (`tests/`)
+- Runs `CGD.py` directly on the bundled example FASTA
+- Runs the full Snakemake workflow end to end and checks that every expected
+  output file was produced
+
+---
+
 ## Project Structure
 
 ```
 CGD/
-├── CGD.py              # Main scoring tool
-├── get_sequence.py     # Reverse complement utility
-├── requirements.txt    # Python dependencies
-├── README.md           # This file
-├── .gitignore          # Git ignore rules
-├── Test_dataset/       # Example input FASTA files
-└── Training_data/      # Training data used to build models
+├── CGD.py                        # Main scoring tool
+├── get_sequence.py               # Reverse complement utility
+├── requirements.txt              # Python dependencies
+├── README.md                     # This file
+├── .gitignore                    # Git ignore rules
+├── Snakefile                     # Snakemake workflow definition
+├── config/
+│   └── config.yaml               # Snakemake sample/mode configuration
+├── envs/
+│   └── environment.yaml          # Conda environment for --use-conda
+├── tests/
+│   └── test_cgd.py               # Unit / regression tests
+├── .github/workflows/
+│   └── ci.yml                    # GitHub Actions CI pipeline
+├── Test_dataset/                 # Example input FASTA files
+└── Training_data/                # Training data used to build models
 ```
 
 ---

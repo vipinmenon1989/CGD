@@ -1,0 +1,9 @@
+name: cgd
+channels:
+  - bioconda
+  - conda-forge
+dependencies:
+  - python>=3.8
+  - numpy>=1.12.4
+  - viennarna>=2.5.0
+  - pip
