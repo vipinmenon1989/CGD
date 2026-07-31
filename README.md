@@ -5,7 +5,7 @@
 **Author:** Vipin Menon, BIG Lab, Hanyang University (HYU)
 **Contact:** a.vipin.menon@gmail.com
 **Original:** September 2019 | **Modernized:** 2026
-**Language:** Python 3.8+
+**Language:** Python 3.10+
 **License:** MIT
 
 ---
@@ -220,7 +220,7 @@ Snakemake profile outside this repository.
 Every push and pull request is validated by GitHub Actions
 (`.github/workflows/ci.yml`), which:
 
-- Installs dependencies (including ViennaRNA bindings) on Python 3.10 and 3.11
+- Installs dependencies (including ViennaRNA bindings) on Python 3.11 and 3.12
 - Lints for syntax errors / undefined names
 - Runs the unit test suite (`tests/`)
 - Runs `CGD.py` directly on the bundled example FASTA

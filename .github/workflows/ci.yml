@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11"]
+        python-version: ["3.11", "3.12"]
 
     steps:
       - name: Check out repository
@@ -26,7 +26,6 @@ jobs:
           activate-environment: cgd-workflow
           environment-file: workflow-env.yaml
           python-version: ${{ matrix.python-version }}
-          auto-activate-base: false
 
       - name: Show workflow environment
         shell: bash -el {0}
