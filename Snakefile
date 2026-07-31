@@ -21,7 +21,7 @@ from snakemake.utils import validate
 
 
 configfile: "config/config.yaml"
-validate(config, workflow.basedir + "/config/config.schema.yaml")
+validate(config, "config/config.schema.yaml")
 
 # Mode name -> CGD.py CLI flag
 MODE_FLAG = {

@@ -224,7 +224,7 @@ Every push and pull request is validated by GitHub Actions
 - Lints for syntax errors / undefined names
 - Runs the unit test suite (`tests/`)
 - Runs `CGD.py` directly on the bundled example FASTA
-- Validates the Snakefile and configuration schema
+- Validates the Snakefile and configuration schema with a complete dry-run
 - Creates the rule-specific Conda environment
 - Runs the Conda-managed Snakemake workflow end to end and checks that every
   expected output file was produced
