@@ -1,6 +1,9 @@
 # CGD Snakemake workflow configuration
 # -------------------------------------
 # List each FASTA input you want scored, keyed by a short sample name.
+# Sample names may contain letters, numbers, dots, underscores, and hyphens.
+# Paths are resolved relative to the directory where Snakemake is launched;
+# absolute paths are recommended when inputs live elsewhere on an HPC system.
 samples:
   demo: input.fa
 

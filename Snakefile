@@ -15,7 +15,13 @@ active environment:
     snakemake --cores 1
 """
 
+from pathlib import Path
+
+from snakemake.utils import validate
+
+
 configfile: "config/config.yaml"
+validate(config, workflow.basedir + "/config/config.schema.yaml")
 
 # Mode name -> CGD.py CLI flag
 MODE_FLAG = {
@@ -41,6 +47,7 @@ SUFFIX_TO_MODE = {v: k for k, v in MODE_SUFFIX.items()}
 SAMPLES = config["samples"]
 MODES = config.get("modes", list(MODE_FLAG))
 OUTDIR = config.get("outdir", "results")
+CGD_SCRIPT = str(Path(workflow.basedir) / "CGD.py")
 
 for m in MODES:
     if m not in MODE_FLAG:
@@ -67,10 +74,15 @@ rule cgd_score:
         OUTDIR + "/{sample}/{suffix}.txt",
     log:
         OUTDIR + "/logs/{sample}.{suffix}.log",
+    threads: 1
+    resources:
+        mem_mb=2000,
+        runtime=30,
     params:
         flag=lambda wc: MODE_FLAG[SUFFIX_TO_MODE[wc.suffix]],
+        script=CGD_SCRIPT,
     conda:
         "envs/environment.yaml"
     shell:
-        "python {workflow.basedir}/CGD.py -{params.flag} {input.fasta} "
-        "-o {output} > {log} 2>&1"
+        "python {params.script:q} -{params.flag} {input.fasta:q} "
+        "-o {output:q} > {log:q} 2>&1"

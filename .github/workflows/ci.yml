@@ -20,37 +20,64 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: conda-incubator/setup-miniconda@v3
         with:
+          miniforge-version: latest
+          activate-environment: cgd-workflow
+          environment-file: workflow-env.yaml
           python-version: ${{ matrix.python-version }}
+          auto-activate-base: false
+
+      - name: Show workflow environment
+        shell: bash -el {0}
+        run: |
+          python --version
+          snakemake --version
+          conda --version
 
       - name: Install CGD dependencies
+        shell: bash -el {0}
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install snakemake "pulp<2.8" flake8 pyflakes pytest
+          pip install flake8 pyflakes pytest
 
       - name: Sanity-check ViennaRNA bindings
+        shell: bash -el {0}
         run: python -c "import RNA; print(RNA.fold('ATCGATCGATCGATCGATCG'))"
 
       - name: Lint (syntax errors / undefined names only)
+        shell: bash -el {0}
         run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
 
       - name: Run unit tests
+        shell: bash -el {0}
         run: pytest tests/ -v
 
       - name: Run CGD.py directly on the bundled example FASTA
+        shell: bash -el {0}
         run: |
           python CGD.py -a input.fa -o /tmp/CGD.txt
           test -s /tmp/CGD.txt
 
-      - name: Dry-run the Snakemake workflow
-        run: snakemake --cores 1 -n
+      - name: Lint the Snakemake workflow
+        shell: bash -el {0}
+        run: snakemake --lint
 
-      - name: Run the Snakemake workflow end to end
-        run: snakemake --cores 2
+      - name: Dry-run the Snakemake workflow
+        shell: bash -el {0}
+        run: snakemake --cores 1 --software-deployment-method conda -n
+
+      - name: Create rule-specific Conda environments
+        shell: bash -el {0}
+        run: snakemake --cores 1 --software-deployment-method conda --conda-create-envs-only
+
+      - name: Run the Conda-managed Snakemake workflow end to end
+        shell: bash -el {0}
+        run: snakemake --cores 2 --software-deployment-method conda
 
       - name: Verify Snakemake outputs were produced
+        shell: bash -el {0}
         run: |
           for f in results/demo/CGD.txt results/demo/CGDi.txt results/demo/CGDa.txt \
                    results/demo/CGD9.txt results/demo/CGD12a.txt results/demo/CGD9NG.txt; do
