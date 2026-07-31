@@ -135,20 +135,17 @@ python CGD.py -a input.fa -o results/my_sample_CGD.txt
 For batch scoring of multiple FASTA files across multiple CRISPR systems, use
 the included Snakemake workflow instead of calling `CGD.py` by hand.
 
-### 1. Install the workflow environment
+CGD provides two clearly separated Snakemake execution modes:
 
-Install Miniforge, Mamba, or Conda on the workstation or HPC login node, then:
+1. **Local version** — runs jobs on a workstation or an allocated interactive
+   compute node.
+2. **HPC version (SLURM)** — submits independent jobs to a SLURM scheduler.
 
-```bash
-conda env create -f workflow-env.yaml
-conda activate cgd-workflow
-```
+Both versions use the same `Snakefile`, configuration, and scoring code, so
+local and HPC results do not drift apart.
 
-This environment contains Snakemake 9, Conda for rule-specific software
-deployment, and the official SLURM executor plugin. CGD itself runs inside the
-isolated environment declared in `envs/environment.yaml`.
+### Common configuration for both versions
 
-### 2. Configure samples and modes
 Edit `config/config.yaml`:
 ```yaml
 samples:
@@ -170,7 +167,18 @@ Sample names may contain letters, numbers, dots, underscores, and hyphens.
 Input paths are resolved relative to the directory where Snakemake is launched;
 absolute input paths are recommended on an HPC system.
 
-### 3. Validate and run locally
+### Version 1: Local Snakemake
+
+Use this version on a personal workstation or inside an HPC interactive job.
+Install Miniforge, Mamba, or Conda, then create the workflow environment:
+
+```bash
+conda env create -f workflow-env.yaml
+conda activate cgd-workflow
+```
+
+Validate and execute locally:
+
 ```bash
 # Validate configuration and preview all jobs
 snakemake --cores 1 --software-deployment-method conda --dry-run
@@ -182,7 +190,15 @@ snakemake --cores 4 --software-deployment-method conda
 Do not run the second command on an HPC login node unless local computation is
 explicitly allowed by the cluster administrators.
 
-### 4. Run on a SLURM HPC cluster
+### Version 2: HPC Snakemake (SLURM)
+
+Use this version from a SLURM submission host with `sbatch` and `sacct`
+available. Create and activate the workflow environment on the HPC system:
+
+```bash
+conda env create -f workflow-env.yaml
+conda activate cgd-workflow
+```
 
 The bundled profile submits each CGD scoring job through `sbatch` and requests
 one CPU, 2 GB memory, and 30 minutes per job by default:
